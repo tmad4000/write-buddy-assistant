@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Editor } from "@/components/Editor";
 import { AISidebar } from "@/components/AISidebar";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Change {
   id: string;
@@ -59,22 +60,18 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/functions/generate-suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-suggestions', {
+        body: {
           text: content,
           prompt: prompt,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate suggestions');
+      if (error) {
+        throw error;
       }
 
-      const changes: Change[] = await response.json();
+      const changes = data;
       const modifiedText = applyChanges(content, changes);
       
       setModifications(prev => [...prev, {
