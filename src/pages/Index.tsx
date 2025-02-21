@@ -30,32 +30,6 @@ const Index = () => {
     setContent(newContent);
   };
 
-  const generateChanges = (text: string, prompt: string): Change[] => {
-    // This is where we'll integrate with the AI API
-    // For now, let's create some example changes
-    const changes: Change[] = [];
-    
-    if (prompt === "Make it shorter") {
-      // Find words to remove
-      const words = text.split(" ");
-      let currentIndex = 0;
-      words.forEach((word, i) => {
-        if (word.length > 4 && Math.random() > 0.7) {
-          changes.push({
-            id: `del-${i}`,
-            type: 'deletion',
-            content: word + ' ',
-            startIndex: currentIndex,
-            endIndex: currentIndex + word.length + 1,
-          });
-        }
-        currentIndex += word.length + 1;
-      });
-    }
-    
-    return changes;
-  };
-
   const applyChanges = (originalText: string, changes: Change[]): string => {
     let result = originalText;
     // Apply changes in reverse order to maintain correct indices
@@ -85,9 +59,22 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // This is where we'll make the API call to the AI service
-      // For now, we'll generate some example changes
-      const changes = generateChanges(content, prompt);
+      const response = await fetch('/functions/generate-suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: content,
+          prompt: prompt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate suggestions');
+      }
+
+      const changes: Change[] = await response.json();
       const modifiedText = applyChanges(content, changes);
       
       setModifications(prev => [...prev, {
@@ -98,6 +85,7 @@ const Index = () => {
       
       setSuggestions([prompt]);
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: "Error",
         description: "Failed to generate suggestions.",
