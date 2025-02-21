@@ -7,7 +7,11 @@ interface Change {
   endIndex: number;
 }
 
-export async function handler(req: Request) {
+export const config = {
+  runtime: 'edge',
+};
+
+export default async function handler(req: Request) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
