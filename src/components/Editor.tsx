@@ -38,10 +38,16 @@ export function Editor({
 }: EditorProps) {
   const [selectedModification, setSelectedModification] = useState<TextModification | null>(null);
 
-  const renderTextWithChanges = () => {
-    if (!content) return '';
+  const handleContentEdit = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onContentChange(event.target.value);
+  };
 
-    const changes = selectedModification?.changes || [];
+  const renderTextWithChanges = () => {
+    if (!selectedModification) {
+      return null;
+    }
+
+    const changes = selectedModification.changes;
     let result = [];
     let currentIndex = 0;
 
@@ -144,17 +150,18 @@ export function Editor({
           ))}
         </div>
       </div>
-      <div 
-        className="flex-1 p-6 text-lg leading-relaxed bg-editor-bg text-editor-text"
-      >
-        {content ? (
+      <div className="flex-1 p-6 text-lg leading-relaxed bg-editor-bg text-editor-text">
+        {selectedModification ? (
           <div className="whitespace-pre-wrap">
             {renderTextWithChanges()}
           </div>
         ) : (
-          <div className="text-gray-400">
-            Paste your text here...
-          </div>
+          <textarea
+            value={content}
+            onChange={handleContentEdit}
+            className="w-full h-full min-h-[200px] bg-transparent outline-none resize-none"
+            placeholder="Paste your text here..."
+          />
         )}
       </div>
       {isLoading && (
