@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Undo } from "lucide-react";
 
 interface Change {
   id: string;
@@ -10,13 +11,20 @@ interface Change {
   endIndex: number;
 }
 
+interface TextModification {
+  originalText: string;
+  modifiedText: string;
+  changes: Change[];
+}
+
 interface EditorProps {
   onContentChange: (content: string) => void;
   content: string;
   suggestions: string[];
   isLoading: boolean;
-  onAcceptSuggestion: (index: number) => void;
+  onAcceptSuggestion: (index: number, changes: Change[]) => void;
   onRejectSuggestion: (index: number) => void;
+  modifications: TextModification[];
 }
 
 export function Editor({
@@ -26,27 +34,14 @@ export function Editor({
   isLoading,
   onAcceptSuggestion,
   onRejectSuggestion,
+  modifications,
 }: EditorProps) {
-  const [changes] = useState<Change[]>([
-    {
-      id: '1',
-      type: 'deletion',
-      content: 'very ',
-      startIndex: 20,
-      endIndex: 25,
-    },
-    {
-      id: '2',
-      type: 'addition',
-      content: 'extremely ',
-      startIndex: 20,
-      endIndex: 20,
-    }
-  ]);
+  const [selectedModification, setSelectedModification] = useState<TextModification | null>(null);
 
   const renderTextWithChanges = () => {
     if (!content) return '';
 
+    const changes = selectedModification?.changes || [];
     let result = [];
     let currentIndex = 0;
 
@@ -72,7 +67,7 @@ export function Editor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onAcceptSuggestion(0)}
+                onClick={() => selectedModification && onAcceptSuggestion(0, selectedModification.changes)}
                 className="h-6 text-xs"
               >
                 Accept
@@ -99,7 +94,7 @@ export function Editor({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onAcceptSuggestion(0)}
+                onClick={() => selectedModification && onAcceptSuggestion(0, selectedModification.changes)}
                 className="h-6 text-xs"
               >
                 Accept
@@ -133,6 +128,22 @@ export function Editor({
 
   return (
     <div className="flex flex-col h-full">
+      <div className="border-b border-gray-200 p-2 flex justify-between items-center">
+        <div className="flex gap-2">
+          {modifications.map((mod, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => setSelectedModification(mod)}
+            >
+              <Undo className="h-4 w-4" />
+              Change {index + 1}
+            </Button>
+          ))}
+        </div>
+      </div>
       <div 
         className="flex-1 p-6 text-lg leading-relaxed bg-editor-bg text-editor-text"
       >
