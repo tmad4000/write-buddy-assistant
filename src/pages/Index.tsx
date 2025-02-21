@@ -5,7 +5,7 @@ import { AISidebar } from "@/components/AISidebar";
 import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState("This is a very important document that needs some improvements.");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -28,12 +28,7 @@ const Index = () => {
     setIsLoading(true);
     // Simulate AI response for now
     setTimeout(() => {
-      const fakeSuggestions = [
-        "Changed passive voice to active voice in paragraph 2.",
-        "Removed redundant phrases to improve conciseness.",
-        "Suggested clearer terminology for technical concepts.",
-      ];
-      setSuggestions(fakeSuggestions);
+      setSuggestions([prompt]);
       setIsLoading(false);
     }, 1500);
   };
@@ -41,15 +36,15 @@ const Index = () => {
   const handleAcceptSuggestion = (index: number) => {
     setSuggestions((prev) => prev.filter((_, i) => i !== index));
     toast({
-      title: "Suggestion accepted",
-      description: "The change has been applied to your text.",
+      title: "Change accepted",
+      description: "The modification has been applied to your text.",
     });
   };
 
   const handleRejectSuggestion = (index: number) => {
     setSuggestions((prev) => prev.filter((_, i) => i !== index));
     toast({
-      description: "Suggestion removed",
+      description: "Change rejected",
     });
   };
 

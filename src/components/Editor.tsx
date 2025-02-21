@@ -1,7 +1,14 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+
+interface Change {
+  id: string;
+  type: 'deletion' | 'addition';
+  content: string;
+  startIndex: number;
+  endIndex: number;
+}
 
 interface EditorProps {
   onContentChange: (content: string) => void;
@@ -20,48 +27,125 @@ export function Editor({
   onAcceptSuggestion,
   onRejectSuggestion,
 }: EditorProps) {
+  const [changes] = useState<Change[]>([
+    {
+      id: '1',
+      type: 'deletion',
+      content: 'very ',
+      startIndex: 20,
+      endIndex: 25,
+    },
+    {
+      id: '2',
+      type: 'addition',
+      content: 'extremely ',
+      startIndex: 20,
+      endIndex: 20,
+    }
+  ]);
+
+  const renderTextWithChanges = () => {
+    if (!content) return '';
+
+    let result = [];
+    let currentIndex = 0;
+
+    const sortedChanges = [...changes].sort((a, b) => a.startIndex - b.startIndex);
+
+    for (const change of sortedChanges) {
+      if (currentIndex < change.startIndex) {
+        result.push(
+          <span key={`text-${currentIndex}`}>
+            {content.slice(currentIndex, change.startIndex)}
+          </span>
+        );
+      }
+
+      if (change.type === 'deletion') {
+        result.push(
+          <span 
+            key={change.id} 
+            className="text-red-600 line-through hover:bg-red-50 group relative"
+          >
+            {content.slice(change.startIndex, change.endIndex)}
+            <div className="absolute hidden group-hover:flex gap-1 -top-6 left-0 bg-white shadow-lg rounded-md p-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onAcceptSuggestion(0)}
+                className="h-6 text-xs"
+              >
+                Accept
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRejectSuggestion(0)}
+                className="h-6 text-xs"
+              >
+                Reject
+              </Button>
+            </div>
+          </span>
+        );
+      } else {
+        result.push(
+          <span 
+            key={change.id} 
+            className="text-green-600 underline hover:bg-green-50 group relative"
+          >
+            {change.content}
+            <div className="absolute hidden group-hover:flex gap-1 -top-6 left-0 bg-white shadow-lg rounded-md p-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onAcceptSuggestion(0)}
+                className="h-6 text-xs"
+              >
+                Accept
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRejectSuggestion(0)}
+                className="h-6 text-xs"
+              >
+                Reject
+              </Button>
+            </div>
+          </span>
+        );
+      }
+
+      currentIndex = change.type === 'deletion' ? change.endIndex : change.startIndex;
+    }
+
+    if (currentIndex < content.length) {
+      result.push(
+        <span key={`text-${currentIndex}`}>
+          {content.slice(currentIndex)}
+        </span>
+      );
+    }
+
+    return result;
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <textarea
-        className="flex-1 p-6 text-lg leading-relaxed outline-none resize-none bg-editor-bg text-editor-text"
-        placeholder="Paste your text here..."
-        value={content}
-        onChange={(e) => onContentChange(e.target.value)}
-      />
-      {suggestions.length > 0 && (
-        <div className="border-t border-gray-200 p-4 space-y-4 animate-fadeIn">
-          <h3 className="font-semibold text-lg text-editor-text">Suggestions</h3>
-          <div className="space-y-3">
-            {suggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                className="p-4 bg-editor-subtle rounded-lg flex items-start justify-between gap-4 animate-slideIn"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <p className="text-editor-text flex-1">{suggestion}</p>
-                <div className="flex gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAcceptSuggestion(index)}
-                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRejectSuggestion(index)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </div>
-            ))}
+      <div 
+        className="flex-1 p-6 text-lg leading-relaxed bg-editor-bg text-editor-text"
+      >
+        {content ? (
+          <div className="whitespace-pre-wrap">
+            {renderTextWithChanges()}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-gray-400">
+            Paste your text here...
+          </div>
+        )}
+      </div>
       {isLoading && (
         <div className="flex items-center justify-center p-4 border-t border-gray-200 animate-fadeIn">
           <Loader2 className="h-6 w-6 animate-spin text-editor-accent" />
